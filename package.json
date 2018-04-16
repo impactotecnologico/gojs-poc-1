@@ -1,0 +1,27 @@
+{
+  "name": "GoJS Concept testing",
+  "version": "0.0.1",
+  "description": "Workflow editor",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://gitlab.com/ceal1818/gojs-concept-testing"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "gojs",
+    "workflow",
+    "editor"
+  ],
+  "author": {
+    "name": "Carlos Eduardo Ayala Leandro",
+    "email": "ceal1818@gmail.com"
+  },
+  "license": "ISC",
+  "dependencies": {
+    "gojs": "^1.8.16",
+    "jquery": "^2.2.4"
+  }
+}

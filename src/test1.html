@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="../node_modules/gojs/assets/css/jquery-ui.min.css">
+    <link rel="stylesheet" href="../node_modules/gojs/assets/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../node_modules/gojs/assets/css/main.css">
+    <link rel='stylesheet' href='../node_modules/gojs/extensions/DataInspector.css' />
+    <title>Test 1</title>
+    <style type="text/css">
+        .draggable {
+            display: inline-block;
+            vertical-align: top;
+            border: 4px solid #BBB;
+            border-radius: 4px;
+            background-color: #F5F5F5;
+
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 500;
+        }
+
+        .handle {
+            background-color: lightblue;
+            cursor: move;
+            text-align: center;
+            font: bold 12px sans-serif;
+        }
+
+        #infoDraggable {
+            font: 12px helvetica, sans-serif;
+        }
+
+        #myInfo {
+            width: 100%;
+            overflow: hidden;
+        }
+
+        #myPaletteDiv {
+            background-color: #F5F5F5;
+            width: 100%;
+            height: 100%;
+        }
+
+        /*
+        One simple way of making a div fill its space,
+        with allowances for the title (top) and the resize handle (bottom)
+        */
+
+        #paletteContainer {
+            position: absolute;
+            bottom: 14px;
+            left: 0px;
+            right: 0px;
+            top: 14px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="sample">
+        <div style="width:100%">
+            <span id="paletteSpan" style="display: inline-block; vertical-align: top">
+                <div id="myPalette" style="width: 120px; height: 250px" class="diagramStyling"></div>
+            </span>
+            <span id="diagramSpan" style="display: inline-block; vertical-align: top">
+                <div id="myDiagram" style="width: 500px; height: 250px" class="diagramStyling"></div>
+            </span>
+            <span id="paletteSpan" style="display: inline-block; vertical-align: top">
+                <div id="myPalette2" style="width: 120px; height: 250px" class="diagramStyling"></div>
+            </span>
+        </div>
+        <div id="infoDraggable" class="draggable" style="display: inline-block; padding: 5px; left: 380px;">
+            <div id="infoDraggableHandle" class="handle">Info</div>
+            <div>
+                <div id="myInfo"></div>
+            </div>
+        </div>
+        <pre id="output" style="width: 740px;">
+        </pre>
+    </div>
+
+    <script src="../node_modules/gojs/release/go.js"></script>
+    <script src="../node_modules/gojs/assets/js/jquery.min.js"></script>
+    <script src="../node_modules/gojs/assets/js/jquery-ui.min.js"></script>
+    <script src="../node_modules/gojs/assets/js/bootstrap.min.js"></script>
+    <script src="../node_modules/gojs/extensions/DataInspector.js"></script>
+    <script>
+        function diagramModelChangedListener(e) {
+            var workflow = {
+                id: 1,
+                name: "Model workflow 1",
+                type: 1,
+                raw: null
+            };
+            if (e.isTransactionFinished) {
+                workflow.raw = JSON.parse(myDiagram.model.toJSON());
+                $("#output").html(JSON.stringify(workflow, null, 4));
+            }
+        }
+
+        var GO = go.GraphObject.make;
+        var myDiagram = GO(go.Diagram, "myDiagram");
+        // initialize the main Diagram
+        myDiagram.allowDrop = true;  // permit accepting drag-and-drops
+
+        myDiagram.nodeTemplate =
+            GO(go.Node, "Auto",
+                GO(go.Shape, "RoundedRectangle",
+                    { fill: "white" },
+                    new go.Binding("fill", "color"),
+                    { portId: "", fromLinkable: true, toLinkable: true, cursor: "pointer" }),
+                GO(go.TextBlock, { margin: 5 },
+                    new go.Binding("text", "phase"))
+            );
+
+        // start off with no Parts
+        myDiagram.undoManager.isEnabled = true;
+
+        myDiagram.addModelChangedListener(diagramModelChangedListener);
+        
+        /* Investigación
+        myDiagram.addDiagramListener("ExternalObjectsDropped", function(e){
+            console.log("myDiagram",e);
+        });
+
+          */    
+        // create the Palette
+        var myPalette = GO(go.Palette, "myPalette");
+
+        // the Palette's node template is different from the main Diagram's
+        myPalette.nodeTemplate = GO(go.Node, "Horizontal",
+            GO(go.Shape,
+                { width: 14, height: 14, fill: "white" },
+                new go.Binding("fill", "color")),
+            GO(go.TextBlock,
+                new go.Binding("text", "color"))
+        );
+
+        // the list of data to show in the Palette
+        myPalette.model.nodeDataArray = [
+            { key: "C", color: "cyan" },
+            { key: "LC", color: "lightcyan" },
+            { key: "A", color: "aquamarine" },
+            { key: "T", color: "turquoise" },
+            { key: "PB", color: "powderblue" },
+            { key: "LB", color: "lightblue" },
+            { key: "LSB", color: "lightskyblue" },
+            { key: "DSB", color: "deepskyblue" }
+        ];
+
+        // create the Palette
+        var myPalette2 =
+            GO(go.Palette, "myPalette2",
+                { // customize the GridLayout to align the centers of the locationObjects
+                    layout: GO(go.GridLayout, { alignment: go.GridLayout.Location })
+                });
+
+        // the Palette's node template is different from the main Diagram's
+        myPalette2.nodeTemplate =
+            GO(go.Node, "Vertical",
+                { locationObjectName: "TB", locationSpot: go.Spot.Center },
+                GO(go.Shape,
+                    { width: 20, height: 20, fill: "white" },
+                    new go.Binding("fill", "color")),
+                GO(go.TextBlock, { name: "TB" },
+                    new go.Binding("text", "color"))
+            );
+        
+        /* Investigación.
+        myPalette2.addDiagramListener("SelectionMoved", function(e){
+            console.log("myPalette2", e);
+        });  
+        */
+        // the list of data to show in the Palette
+        myPalette2.model.nodeDataArray = [
+            { key: "IR", color: "indianred" },
+            { key: "LC", color: "lightcoral" },
+            { key: "S", color: "salmon" },
+            { key: "DS", color: "darksalmon" },
+            { key: "LS", color: "lightsalmon" }
+        ];
+        $(function () {
+            var phases = ["phase 1","phase 2","phase 3"];
+            var documents = ["document 1","document 2","document 3"];
+            var subphases = {
+                "phase 1": ["A", "B", "C"],
+                "phase 2": ["D", "E", "F"],
+                "phase 3": ["G", "H", "I"]
+            };
+            $("#infoDraggable").draggable({ handle: "#infoDraggableHandle" });
+
+            var inspector = new Inspector('myInfo', myDiagram,
+                {
+                    properties: {
+                        // key would be automatically added for nodes, but we want to declare it read-only also:
+                        "key": { show: false },
+                        "color": { show: false},
+                        "from": { show: false },
+                        "to": { show: false},                        
+                        "phase": { type: "select", show: Inspector.showIfNode, choices: phases},
+                        "subphase": { type: "select", show: Inspector.showIfNode },
+                        "document": { type: "select", show: Inspector.showIfLink, choices: documents},
+                        "qty": { type: "string", show: Inspector.showIfLink, defaultValue: "0" },
+                    },
+                    propertyModified: function(name, value){
+                        var _jQueryForm = $(this._div);
+                        if (name == "phase"){
+                            var _subphases = subphases[value];
+                            this.declaredProperties.subphase.choices = _subphases;
+                            var _jQuerySubphasesSelect = $(_jQueryForm.find("select[tabindex='2']"));
+
+                            _subphases.forEach(function(value){
+                                _jQuerySubphasesSelect.append("<option id="+value+">"+value+"</option>")
+                            });
+                        }
+                    }
+                });
+            });           
+    </script>
+</body>
+
+</html>
